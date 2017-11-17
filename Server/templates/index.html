@@ -1,0 +1,42 @@
+<html lang="en">
+<head>
+    <link href="static/main.css" rel="stylesheet" type="text/css" media="all">
+</head>
+    <body>
+      <h1 style="text-align:center;">Team/Challenge Reception Desk as Tourist Office <a href="http://dribdat-hackopendata.herokuapp.com/project/106">TASK</a></h1>
+    	<div class="box">
+  			<h1>Enter map data</h1>
+  			<form action="/" method="post">
+          <input type="number"name="id" id="id" placeholder="id" required/>
+          <br>
+          <input type="number" step="any" name="center_lat" id="center_lat" placeholder="center_lat" required/>
+    			<br>
+    			<input type="number" step="any" name="center_lon" id="center_lon" placeholder="center_lon" required/>
+    			<br>
+          <input type="number" step="any" name="zoom" id="zoom" placeholder="zoom" required/>
+    			<br>
+    			<input type="submit" class="button" value="Save"/>
+  			</form>
+		</div>
+
+    <div class="footer">
+      <h4>Made by Open Tourism Data Hackdays - October 27 - 28, 2017 - Arosa</h4>
+    </div>
+
+    {%if maps%}
+    <div class="users" style="margin-left:20%">
+      <h2>Show maps in database</h2>
+      <table style="width:100%;">
+        <tr>
+          <td>map_id, date, center_lat, center_lon,zoom </td>
+        </tr>
+        {%for map in maps%}
+          <tr>
+            <td>{{map[0], map[1], map[2], map[3], map[4] }}</td>
+          </tr>
+        {%endfor%}
+      </table>
+    </div>
+    {%endif%}
+</body>
+</html>

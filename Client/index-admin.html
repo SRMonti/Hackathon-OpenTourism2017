@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Tourism Office Reception</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+     <!-- Materialize -->
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js" integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log==" crossorigin=""></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.debug.js"></script>
+
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-image/v0.0.4/leaflet-image.js'></script>
+</head>
+<body>
+    
+<nav>
+    <div class="nav-wrapper">
+      <a href="" class="brand-logo">Open Data Tourism Office Map</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="http://hack.opendata.ch/project/106">Project Link</a></li>
+        </ul>
+    </div>
+  </nav>
+  <li>version 0.3</li>
+    <div class="row">
+                <div id="mapid" class="col s8" style="height: 600px;"></div>
+                <div class="col s4">
+                                        
+                <ul id="markerList" class="collection" style="overflow-y: scroll; height:600px;">
+                </ul>
+                <div class="row">
+                <button class="btn waves-effect waves-light" type="submit" name="action" onclick="createAllJSON()">Send Map
+                        <i class="material-icons right">send</i>
+                </button>
+                <button id="print-btn" class="btn waves-effect waves-light" type="submit" name="action" >Print Map
+                    <i class="material-icons right">print</i>
+                  </button>
+                </div>    
+                </div>
+        </div>
+
+<script>
+
+    var popup;
+    var marker;
+    var markerIterator = 1;
+
+    json_map={};
+
+    var markersArray = [];
+    var marker1= [46.78381, 9.67944, "Train station with information desk"];
+    var marker2= [46.78146, 9.68393, "Bar/Pub with good live music"];
+    var marker3= [46.78033, 9.68352, "Your hotel: Sunstar Hotel"];
+
+    markersArray.push(marker1);
+    markersArray.push(marker2);
+    markersArray.push(marker3);
+
+	var mymap = L.map('mapid').setView([46.78233, 9.68009], 16);
+
+	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+		maxZoom: 18,
+		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+			'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+		id: 'mapbox.streets'
+	}).addTo(mymap);
+    
+
+for (var index = 0; index < markersArray.length; index++) {
+
+    marker = new L.Marker([markersArray[index][0],markersArray[index][1]], {draggable:true, alt:markerIterator});
+    markerIterator++;
+    mymap.addLayer(marker);
+
+    popup = new L.popup(
+            {
+            closeOnClick: false,
+            autoClose: false
+            }
+        ).setContent(markersArray[index][2]);
+
+    marker.bindPopup(popup).openPopup();
+
+}
+
+listAllMarker();
+
+function onMapClick(e) {
+
+        //alert("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng);
+        marker = new L.Marker(e.latlng, {draggable:true, alt:markerIterator});
+        markerIterator++;
+        popup = new L.popup(
+            {
+            closeOnClick: false,
+            autoClose: false
+            }
+        ).setContent("");
+        mymap.addLayer(marker);
+        marker.bindPopup(popup).openPopup();
+        marker.closePopup();
+
+        listAllMarker();
+};
+
+mymap.on('click', onMapClick);
+
+function onChangeMarkerComment(markerId) {
+
+mymap.eachLayer(function(layer){
+        if(layer.options.alt==markerId){
+            layer.openPopup();
+            layer.setPopupContent($("#input-"+markerId).val());
+            }
+        });
+    }
+
+    function deleteMarker(markerId) {
+        mymap.eachLayer(function(layer){
+        if(layer.options.alt==markerId){
+            mymap.removeLayer(layer);
+            }
+        });
+        listAllMarker();
+    }
+
+   function listAllMarker(){ 
+
+    $("#markerList").empty();
+
+    mymap.eachLayer(function(layer){
+        if(layer.getPopup()!=null){
+        //console.log(layer.getPopup());
+    
+       $("#markerList").append('<li class="collection-item"> <div class="row"><i class="material-icons col s1">place</i><div class="input-field col s10"><input value="'+layer.getPopup().getContent()+'" id="input-'+ layer.options.alt +'" type="text" class="validate" onchange="onChangeMarkerComment('+ layer.options.alt +')" onkeydown="onChangeMarkerComment('+ layer.options.alt +')" onpaste="onChangeMarkerComment('+ layer.options.alt +')" oninput="onChangeMarkerComment('+ layer.options.alt +')"><label class="active" for="input-'+ layer.options.alt +'">Comment Marker '+layer.options.alt+' </label></div><a class="btn btn-mediumwaves-effect waves-light col s1" onclick="deleteMarker('+ layer.options.alt +')"><i class="material-icons">delete</i></a></div></li>');
+        
+    }
+});
+   }
+    
+$(function () {
+
+    var specialElementHandlers = {
+        '#editor': function (element,renderer) {
+            return true;
+        }
+    };
+ $('#print-btn').click(function () {
+        var doc = new jsPDF({
+            orientation: 'landscape'
+        });
+
+        doc.fromHTML(
+            $('#mapid').html(), 10, 10, 
+            { 'width': 1200, 'elementHandlers': specialElementHandlers }, 
+            function(){ doc.save('sample-file.pdf'); }
+        );
+
+    });  
+});
+
+function stringGen(len)
+{
+    var text = "";
+    
+    var charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+    
+    for( var i=0; i < len; i++ )
+        text += charset.charAt(Math.floor(Math.random() * charset.length));
+    
+    return text;
+}
+
+function createAllJSON(){ 
+    json_map.mapid=stringGen(20);
+    json_map.maplat=mymap.getCenter().lat;
+    json_map.maplng=mymap.getCenter().lng;
+    json_map.mapzoom=mymap.getZoom();
+    json_map.markers=[];
+
+    mymap.eachLayer(function(layer){
+        if(layer.getPopup()!=null){
+            json_map.markers.push
+            (
+                {
+                    lat:layer.getLatLng().lat, 
+                    lng: layer.getLatLng().lng, 
+                    comment: layer.getPopup().getContent()
+                }
+            )        
+    }
+});
+
+alert("Full map details:"+JSON.stringify(json_map));
+}
+
+</script>
+
+</body>
+</html>
